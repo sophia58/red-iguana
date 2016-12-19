@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>Distance to Red Iguana</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lora" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: "Noto Sans", sans-serif;
+            color: #3d3d3d;
+        }
+        
+        section {
+            width: 960px;
+            margin: 20px auto;
+        }
+        
+        h1 {
+            width: 960px;
+            margin: 20px auto;
+            font-family: "Lora", serif;
+            letter-spacing: .04em;
+        }
+        
+        h2 {
+            font-family: "Lora", serif;
+            letter-spacing: .04em;
+        }
+        
+        p {
+            font-size: 1em;
+            line-height: 1.5em;
+        }
+        
+        a {
+            color: #005daa;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        ul {
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 10px 0
+        }
+        
+        #map {
+            width: 960px;
+            height: 540px;
+            margin: 10px auto;
+            border: 2px solid #d3d3d3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Distance to the Red Iguana</h1>
+
+    <div id='map'></div>
+
+    <section>
+        <h2>Find Distance to Red Iguana</h2>
+
+        <p>Map authored by me, Sophia LeBlanc</p>
+
+        <p>Find the distance to the Red Iguana in kilometers by clicking on any area in the map. </p>
+
+    </section>
+
+    <script src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+    <script>
+        var options = {
+            center: [40.74, -110.61],
+            zoom: 6
+        }
+
+        var map = L.map('map', options);
+
+        var clickLayer = L.layerGroup().addTo(map); //create point layer for mouse clicks
+        var redIguana = L.latLng(40.7718, -111.9124); //declare the Red Iguana and set location
+
+
+        //create marker for RedIguana and assign to map
+        var redIguanaMarker = L.marker(redIguana, {
+            icon: L.icon({
+                iconUrl: 'red_iguana.png',
+                iconSize: [40, 36]
+            })
+        }).addTo(map);
+
+
+        //For mouse click events
+        map.on('click', function (e) {
+            clickLayer.clearLayers(); //clear old marker information
+
+            //set new marker -allow to be draggable
+            var cityMarker = L.marker(e.latlng, {
+                draggable: true,
+            });
+
+            //get distance between two coordinate points
+            var distance = getDistance(redIguana, e.latlng);
+            var popup = buildPopup(distance);
+            cityMarker.addTo(clickLayer).bindPopup(popup);
+
+            //check mouse event for dragend
+            cityMarker.on('dragend', function (event) {
+                // console.log('drag end');
+
+                var newPosition = cityMarker.getLatLng();
+                var distance = getDistance(redIguana, newPosition);
+                var popup = buildPopup(distance);
+                cityMarker.addTo(clickLayer).bindPopup(popup);
+
+            });
+        });
+
+        //function to show popup showing distance
+        function buildPopup(distanceValue) {
+            var popup = (distanceValue / 1000).toLocaleString() + ' km to Red Iguana';
+            return popup;
+        }
+
+        //function to get distance between two coordinate positions
+        function getDistance(value1, value2) {
+            var dist = value1.distanceTo(value2);
+            return dist;
+        }
+
+
+        //add map tiles
+        var tiles = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 18,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+        });
+        map.addLayer(tiles);
+    </script>
+
+</body>
+
+</html>
